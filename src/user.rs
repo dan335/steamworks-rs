@@ -123,7 +123,7 @@ impl<Manager> User<Manager> {
         unsafe {
             let res = sys::SteamAPI_ISteamUser_GetAvailableVoice(
                 self.user,
-                pcb_compressed as *mut u32
+                pcb_compressed as *mut _,
             );
             Err(match res {
                 sys::EVoiceResult::k_EVoiceResultOK => return Ok(()),
@@ -195,8 +195,8 @@ impl<Manager> User<Manager> {
                 true,
                 //p_dest_buffer.as_ptr() as *mut c_void,
                 p_dest_buffer.as_mut_ptr() as *mut c_void,
-                p_dest_buffer.len() as u32,
-                n_bytes_written as *mut u32,
+                p_dest_buffer.len() as _,
+                n_bytes_written as *mut _,
             );
             Err(match res {
                 sys::EVoiceResult::k_EVoiceResultOK => return Ok(()),
