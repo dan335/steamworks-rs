@@ -119,12 +119,34 @@ impl<Manager> User<Manager> {
     pub fn get_available_voice(
         &self,
         pcb_compressed: &mut u32
-    ) -> sys::EVoiceResult {
+    ) -> Result<(), VoiceResult> {
         unsafe {
-            return sys::SteamAPI_ISteamUser_GetAvailableVoice(
+            let res = sys::SteamAPI_ISteamUser_GetAvailableVoice(
                 self.user,
                 pcb_compressed as *mut u32
             );
+            Err(match res {
+                sys::EVoiceResult::k_EVoiceResultOK => return Ok(()),
+                sys::EVoiceResult::k_EVoiceResultNotInitialized => {
+                    VoiceResult::NotInitialized
+                },
+                sys::EVoiceResult::k_EVoiceResultNotRecording => {
+                    VoiceResult::NotRecording
+                },
+                sys::EVoiceResult::k_EVoiceResultNoData => {
+                    VoiceResult::NoData
+                },
+                sys::EVoiceResult::k_EVoiceResultBufferTooSmall => {
+                    VoiceResult::BufferTooSmall
+                },
+                sys::EVoiceResult::k_EVoiceResultDataCorrupted => {
+                    VoiceResult::DataCorrupted
+                },
+                sys::EVoiceResult::k_EVoiceResultRestricted => {
+                    VoiceResult::Restricted
+                },
+                _ => unreachable!(),
+            })
         }
     }
 
@@ -163,19 +185,41 @@ impl<Manager> User<Manager> {
     /// all of these details and simply leave the "uncompressed"
     /// parameters as NULL/0.
     pub fn get_voice(
-        &self, p_dest_buffer:
-        &mut [u8],
+        &self,
+        p_dest_buffer: &mut [u8],
         n_bytes_written:
         &mut u32
-    ) -> sys::EVoiceResult {
+    ) -> Result<(), VoiceResult> {
         unsafe {
-            return sys::SteamAPI_ISteamUser_GetVoice(
+            let res = sys::SteamAPI_ISteamUser_GetVoice(
                 self.user,
                 true,
                 p_dest_buffer.as_ptr() as *mut c_void,
                 p_dest_buffer.len() as u32,
                 n_bytes_written as *mut u32,
             );
+            Err(match res {
+                sys::EVoiceResult::k_EVoiceResultOK => return Ok(()),
+                sys::EVoiceResult::k_EVoiceResultNotInitialized => {
+                    VoiceResult::NotInitialized
+                },
+                sys::EVoiceResult::k_EVoiceResultNotRecording => {
+                    VoiceResult::NotRecording
+                },
+                sys::EVoiceResult::k_EVoiceResultNoData => {
+                    VoiceResult::NoData
+                },
+                sys::EVoiceResult::k_EVoiceResultBufferTooSmall => {
+                    VoiceResult::BufferTooSmall
+                },
+                sys::EVoiceResult::k_EVoiceResultDataCorrupted => {
+                    VoiceResult::DataCorrupted
+                },
+                sys::EVoiceResult::k_EVoiceResultRestricted => {
+                    VoiceResult::Restricted
+                },
+                _ => unreachable!(),
+            })
         }
     }
 
@@ -192,9 +236,9 @@ impl<Manager> User<Manager> {
         p_dest_buffer: &mut [u8],
         n_bytes_written: &mut u32,
         n_desired_sample_rate: u32
-    ) -> sys::EVoiceResult {
+    ) -> Result<(), VoiceResult> {
         unsafe {
-            return sys::SteamAPI_ISteamUser_DecompressVoice(
+            let res = sys::SteamAPI_ISteamUser_DecompressVoice(
                 self.user,
                 p_compressed.as_ptr() as *const c_void,
                 p_compressed.len() as u32,
@@ -203,6 +247,28 @@ impl<Manager> User<Manager> {
                 n_bytes_written as *mut u32,
                 n_desired_sample_rate
             );
+            Err(match res {
+                sys::EVoiceResult::k_EVoiceResultOK => return Ok(()),
+                sys::EVoiceResult::k_EVoiceResultNotInitialized => {
+                    VoiceResult::NotInitialized
+                },
+                sys::EVoiceResult::k_EVoiceResultNotRecording => {
+                    VoiceResult::NotRecording
+                },
+                sys::EVoiceResult::k_EVoiceResultNoData => {
+                    VoiceResult::NoData
+                },
+                sys::EVoiceResult::k_EVoiceResultBufferTooSmall => {
+                    VoiceResult::BufferTooSmall
+                },
+                sys::EVoiceResult::k_EVoiceResultDataCorrupted => {
+                    VoiceResult::DataCorrupted
+                },
+                sys::EVoiceResult::k_EVoiceResultRestricted => {
+                    VoiceResult::Restricted
+                },
+                _ => unreachable!(),
+            })
         }
     }
 
@@ -298,6 +364,8 @@ fn test() {
 
     user.end_authentication_session(id);
 }
+
+
 
 /// A handle for an authentication ticket that can be used to cancel
 /// it.
@@ -478,4 +546,26 @@ pub enum AuthSessionValidateError {
     /// The user is banned from the game (not VAC)
     #[error("the user is banned")]
     PublisherIssuedBan,
+}
+
+#[derive(Debug, Error)]
+pub enum VoiceResult {
+    // The Steam Voice interface has not been initialized.
+    #[error("the steam voice interface has not been initialized")]
+    NotInitialized,
+    // Steam Voice is not currently recording.
+    #[error("steam voice is not currently recording")]
+    NotRecording,
+    // There is no voice data available.
+    #[error("there is no voice data available")]
+    NoData,
+    // The provided buffer is too small to receive the data.
+    #[error("the provided buffer is too small to receive the data")]
+    BufferTooSmall,
+    // The voice data has been corrupted.
+    #[error("the voice data has been corrupted")]
+    DataCorrupted,
+    // The user is chat restricted.
+    #[error("the user is chat restricted")]
+    Restricted,
 }
