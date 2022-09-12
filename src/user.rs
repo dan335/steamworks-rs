@@ -186,7 +186,8 @@ impl<Manager> User<Manager> {
     /// parameters as NULL/0.
     pub fn get_voice(
         &self,
-        p_dest_buffer: &mut [u8],
+        //p_dest_buffer: &mut [u8],
+        mut p_dest_buffer: Vec<u8>,
         n_bytes_written:
         &mut u32
     ) -> Result<(), VoiceResult> {
@@ -194,7 +195,8 @@ impl<Manager> User<Manager> {
             let res = sys::SteamAPI_ISteamUser_GetVoice(
                 self.user,
                 true,
-                p_dest_buffer.as_ptr() as *mut c_void,
+                //p_dest_buffer.as_ptr() as *mut c_void,
+                p_dest_buffer.as_mut_ptr() as *mut c_void,
                 p_dest_buffer.len() as u32,
                 n_bytes_written as *mut u32,
             );
