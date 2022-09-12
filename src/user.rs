@@ -108,6 +108,143 @@ impl<Manager> User<Manager> {
             sys::SteamAPI_ISteamUser_EndAuthSession(self.user, user.0);
         }
     }
+
+    /// Checks to see if there is captured audio data available
+    /// from GetVoice, and gets the size of the data.
+    ///
+    /// Most applications will only use compressed data and should
+    /// ignore the other parameters, which exist primarily for
+    /// backwards compatibility. See GetVoice for further explanation
+    /// of "uncompressed" data.
+    pub fn get_available_voice(
+        &self,
+        pcb_compressed: &mut u32
+    ) -> sys::EVoiceResult {
+        unsafe {
+            return sys::SteamAPI_ISteamUser_GetAvailableVoice(
+                self.user,
+                pcb_compressed as *mut u32
+            );
+        }
+    }
+
+    /// Read captured audio data from the microphone buffer.
+    ///
+    /// The compressed data can be transmitted by your application
+    /// and decoded back into raw audio data using DecompressVoice
+    /// on the other side. The compressed data provided is in an
+    /// arbitrary format and is not meant to be played directly.
+    ///
+    /// This should be called once per frame, and at worst no more
+    /// than four times a second to keep the microphone input delay
+    /// as low as possible. Calling this any less may result in gaps
+    /// in the returned stream.
+    ///
+    /// It is recommended that you pass in an 8 kilobytes or larger
+    /// destination buffer for compressed audio. Static buffers are
+    /// recommended for performance reasons. However, if you would
+    /// like to allocate precisely the right amount of space for a
+    /// buffer before each call you may use GetAvailableVoice to find
+    /// out how much data is available to be read.
+    ///
+    /// NOTE: "Uncompressed" audio is a deprecated feature and should
+    /// not be used by most applications. It is raw single-channel
+    /// 16-bit PCM wave data which may have been run through preprocessing
+    /// filters and/or had silence removed, so the uncompressed audio
+    /// could have a shorter duration than you expect. There may be no
+    /// data at all during long periods of silence. Also, fetching
+    /// uncompressed audio will cause GetVoice to discard any leftover
+    /// compressed audio, so you must fetch both types at once. Finally,
+    /// GetAvailableVoice is not precisely accurate when the uncompressed
+    /// size is requested. So if you really need to use uncompressed
+    /// audio, you should call GetVoice frequently with two very large
+    /// (20KiB+) output buffers instead of trying to allocate
+    /// perfectly-sized buffers. But most applications should ignore
+    /// all of these details and simply leave the "uncompressed"
+    /// parameters as NULL/0.
+    pub fn get_voice(
+        &self, p_dest_buffer:
+        &mut [u8],
+        n_bytes_written:
+        &mut u32
+    ) -> sys::EVoiceResult {
+        unsafe {
+            return sys::SteamAPI_ISteamUser_GetVoice(
+                self.user,
+                true,
+                p_dest_buffer.as_ptr() as *mut c_void,
+                p_dest_buffer.len() as u32,
+                n_bytes_written as *mut u32,
+            );
+        }
+    }
+
+    /// Decodes the compressed voice data returned by GetVoice.
+    ///
+    /// The output data is raw single-channel 16-bit PCM audio.
+    /// The decoder supports any sample rate from 11025 to 48000.
+    /// See GetVoiceOptimalSampleRate for more information.
+    ///
+    /// It is recommended that you start with a 20KiB buffer and
+    /// then reallocate as necessary.
+    pub fn decompress_voice(
+        &self, p_compressed: &[u8],
+        p_dest_buffer: &mut [u8],
+        n_bytes_written: &mut u32,
+        n_desired_sample_rate: u32
+    ) -> sys::EVoiceResult {
+        unsafe {
+            return sys::SteamAPI_ISteamUser_DecompressVoice(
+                self.user,
+                p_compressed.as_ptr() as *const c_void,
+                p_compressed.len() as u32,
+                p_dest_buffer.as_ptr() as *mut c_void,
+                p_dest_buffer.len() as u32,
+                n_bytes_written as *mut u32,
+                n_desired_sample_rate
+            );
+        }
+    }
+
+    /// Starts voice recording.
+    ///
+    /// Once started, use GetAvailableVoice and GetVoice to get
+    /// the data, and then call StopVoiceRecording when the user
+    /// has released their push-to-talk hotkey or the game session
+    /// has completed.
+    pub fn start_voice_recording(&self) {
+        unsafe {
+            return sys::SteamAPI_ISteamUser_StartVoiceRecording(self.user);
+        }
+    }
+
+    /// Stops voice recording.
+    ///
+    /// Because people often release push-to-talk keys early, the
+    /// system will keep recording for a little bit after this function
+    /// is called. As such, GetVoice should continue to be called
+    /// until it returns k_EVoiceResultNotRecording, only then will
+    /// voice recording be stopped.
+    pub fn stop_voice_recording(&self) {
+        unsafe {
+            return sys::SteamAPI_ISteamUser_StopVoiceRecording(self.user);
+        }
+    }
+
+    /// Gets the native sample rate of the Steam voice decoder.
+    ///
+    /// Using this sample rate for DecompressVoice will perform the
+    /// least CPU processing. However, the final audio quality will
+    /// depend on how well the audio device (and/or your application's
+    /// audio output SDK) deals with lower sample rates. You may find
+    /// that you get the best audio output quality when you ignore this
+    /// function and use the native sample rate of your audio output
+    /// device, which is usually 48000 or 44100.
+    pub fn get_voice_optimal_sample_rate(&self) -> u32 {
+        unsafe {
+            return sys::SteamAPI_ISteamUser_GetVoiceOptimalSampleRate(self.user);
+        }
+    }
 }
 
 /// Errors from `begin_authentication_session`
