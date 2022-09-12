@@ -186,10 +186,8 @@ impl<Manager> User<Manager> {
     /// parameters as NULL/0.
     pub fn get_voice(
         &self,
-        //p_dest_buffer: &mut [u8],
-        mut p_dest_buffer: Vec<u8>,
-        n_bytes_written:
-        &mut u32
+        p_dest_buffer: &mut [u8],
+        n_bytes_written: &mut u32
     ) -> Result<(), VoiceResult> {
         unsafe {
             let res = sys::SteamAPI_ISteamUser_GetVoice(
