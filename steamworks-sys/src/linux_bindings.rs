@@ -24616,8 +24616,8 @@ extern "C" {
     pub fn SteamAPI_ISteamUser_GetAvailableVoice(
         self_: *mut ISteamUser,
         pcbCompressed: *mut uint32,
-        // pcbUncompressed_Deprecated: *mut uint32,
-        // nUncompressedVoiceDesiredSampleRate_Deprecated: uint32,
+        pcbUncompressed_Deprecated: *mut uint32,
+        nUncompressedVoiceDesiredSampleRate_Deprecated: uint32,
     ) -> EVoiceResult;
 }
 extern "C" {
@@ -24627,11 +24627,11 @@ extern "C" {
         pDestBuffer: *mut ::std::os::raw::c_void,
         cbDestBufferSize: uint32,
         nBytesWritten: *mut uint32,
-        // bWantUncompressed_Deprecated: bool,
-        // pUncompressedDestBuffer_Deprecated: *mut ::std::os::raw::c_void,
-        // cbUncompressedDestBufferSize_Deprecated: uint32,
-        // nUncompressBytesWritten_Deprecated: *mut uint32,
-        // nUncompressedVoiceDesiredSampleRate_Deprecated: uint32,
+        bWantUncompressed_Deprecated: bool,
+        pUncompressedDestBuffer_Deprecated: *mut ::std::os::raw::c_void,
+        cbUncompressedDestBufferSize_Deprecated: uint32,
+        nUncompressBytesWritten_Deprecated: *mut uint32,
+        nUncompressedVoiceDesiredSampleRate_Deprecated: uint32,
     ) -> EVoiceResult;
 }
 extern "C" {
