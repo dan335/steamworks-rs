@@ -251,7 +251,7 @@ impl<Manager> User<Manager> {
     /// then reallocate as necessary.
     pub fn decompress_voice(
         &self,
-        p_compressed: Vec<u8>,
+        p_compressed: &[u8],
         p_dest_buffer: &mut Vec<u8>,
         cb_dest_buffer_size: u32,
         n_bytes_written: &mut u32,
