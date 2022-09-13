@@ -189,15 +189,15 @@ impl<Manager> User<Manager> {
     /// parameters as NULL/0.
     pub fn get_voice(
         &self,
-        // p_dest_buffer: mut [u8],
-        // cb_dest_buffer_size: u32,
-        // n_bytes_written: mut u32
+        p_dest_buffer: &mut Vec<u8>,
+        cb_dest_buffer_size: u32,
+        n_bytes_written: &mut u32,
     ) -> Result<(), VoiceResult> {
         unsafe {
 
-            let mut p_dest_buffer = vec![0; 8192];
-            let cb_dest_buffer_size = 8192;
-            let mut n_bytes_written = 0;
+            // let mut p_dest_buffer = vec![0; 8192];
+            // let cb_dest_buffer_size = 8192;
+            // let mut n_bytes_written = 0;
 
             let mut p_uncompressed_dest_buffer_deprecated = vec![0];
             let mut n_uncompressed_bytes_written_deprecated = 0;
@@ -207,7 +207,7 @@ impl<Manager> User<Manager> {
                 true,
                 p_dest_buffer.as_mut_ptr() as *mut c_void,
                 cb_dest_buffer_size,
-                &mut n_bytes_written,
+                n_bytes_written,
                 false,
                 p_uncompressed_dest_buffer_deprecated.as_mut_ptr() as *mut c_void,
                 0, 
@@ -250,20 +250,22 @@ impl<Manager> User<Manager> {
     /// It is recommended that you start with a 20KiB buffer and
     /// then reallocate as necessary.
     pub fn decompress_voice(
-        &self, p_compressed: &[u8],
-        p_dest_buffer: &mut [u8],
+        &self,
+        p_compressed: Vec<u8>,
+        p_dest_buffer: &mut Vec<u8>,
+        cb_dest_buffer_size: u32,
         n_bytes_written: &mut u32,
-        n_desired_sample_rate: u32
+        n_desired_sample_rate: u32,
     ) -> Result<(), VoiceResult> {
         unsafe {
             let res = sys::SteamAPI_ISteamUser_DecompressVoice(
                 self.user,
                 p_compressed.as_ptr() as *const c_void,
                 p_compressed.len() as _,
-                p_dest_buffer.as_ptr() as *mut c_void,
-                p_dest_buffer.len() as _,
-                n_bytes_written as *mut _,
-                n_desired_sample_rate
+                p_dest_buffer.as_mut_ptr() as *mut c_void,
+                cb_dest_buffer_size,
+                n_bytes_written,
+                n_desired_sample_rate,
             );
             Err(match res {
                 sys::EVoiceResult::k_EVoiceResultOK => return Ok(()),
