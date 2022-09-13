@@ -121,9 +121,12 @@ impl<Manager> User<Manager> {
         pcb_compressed: &mut u32
     ) -> Result<(), VoiceResult> {
         unsafe {
+            let pcb_uncompressed_depreciated: &mut u32 = 0;
             let res = sys::SteamAPI_ISteamUser_GetAvailableVoice(
                 self.user,
                 pcb_compressed as *mut _,
+                pcb_uncompressed_depreciated as *mut _,
+                0
             );
             Err(match res {
                 sys::EVoiceResult::k_EVoiceResultOK => return Ok(()),
@@ -196,14 +199,20 @@ impl<Manager> User<Manager> {
             let cb_dest_buffer_size = 8192;
             let mut n_bytes_written = 0;
 
+            let mut p_uncompressed_dest_buffer_deprecated = vec![0];
+            let mut n_uncompressed_bytes_written_deprecated = 0;
+
             let res = sys::SteamAPI_ISteamUser_GetVoice(
                 self.user,
                 true,
-                //p_dest_buffer.as_ptr() as *mut c_void,
                 p_dest_buffer.as_mut_ptr() as *mut c_void,
-                //p_dest_buffer.len() as _,
                 cb_dest_buffer_size,
                 &mut n_bytes_written,
+                false,
+                p_uncompressed_dest_buffer_deprecated.as_mut_ptr() as *mut c_void,
+                0, 
+                &mut n_uncompressed_bytes_written_deprecated,
+                0
             );
 
 
