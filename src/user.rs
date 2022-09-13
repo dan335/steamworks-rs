@@ -121,7 +121,7 @@ impl<Manager> User<Manager> {
         pcb_compressed: &mut u32
     ) -> Result<(), VoiceResult> {
         unsafe {
-            let pcb_uncompressed_depreciated: &mut u32 = 0;
+            let mut pcb_uncompressed_depreciated: u32 = 0;
             let res = sys::SteamAPI_ISteamUser_GetAvailableVoice(
                 self.user,
                 pcb_compressed as *mut _,
